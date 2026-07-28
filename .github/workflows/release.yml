@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/**'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Publiser versjon
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Finn neste versjon
+        id: version
+        run: |
+          git fetch --tags --force
+          latest="$(git tag -l 'v*.*.*' --sort=-v:refname | head -n1)"
+          if [ -z "$latest" ]; then
+            major=1; minor=0; patch=0
+          else
+            ver="${latest#v}"
+            major="${ver%%.*}"; rest="${ver#*.}"
+            minor="${rest%%.*}"; patch="${rest#*.}"
+            patch=$((patch + 1))
+          fi
+          next="v${major}.${minor}.${patch}"
+          echo "next=$next" >> "$GITHUB_OUTPUT"
+          echo "major=v${major}" >> "$GITHUB_OUTPUT"
+          echo "Neste versjon: $next (major-alias: v${major})"
+
+      - name: Opprett release og oppdater major-tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEXT: ${{ steps.version.outputs.next }}
+          MAJOR: ${{ steps.version.outputs.major }}
+        run: |
+          gh release create "$NEXT" \
+            --target "$GITHUB_SHA" \
+            --title "$NEXT" \
+            --generate-notes
+          git tag -f "$MAJOR" "$GITHUB_SHA"
+          git push origin -f "refs/tags/$MAJOR"

@@ -1,0 +1,11 @@
+version: 2
+updates:
+  # Hold actions brukt i de gjenbrukbare workflowene oppdatert
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    commit-message:
+      prefix: "⬆️ "
+    schedule:
+      interval: "daily"
+    cooldown:
+      default-days: 7
