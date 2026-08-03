@@ -10,12 +10,19 @@ holde dem oppdatert med Dependabot.
 | Workflow | Beskrivelse | Inputs | Outputs |
 | --- | --- | --- | --- |
 | `bygg-og-test-med-gradle.yml` | Bygger og tester med `./gradlew clean build`. | – | – |
-| `bygg-modul-image-med-jib.yml` | Bygger et image med Jib, lager SBOM, signerer og skanner for hemmeligheter. | `modul` (påkrevd) | `image_ref` |
+| `bygg-modul-image-med-jib.yml` | Bygger en modul som et image med Jib, lager SBOM, signerer og skanner for hemmeligheter. | `modul` (påkrevd) | `image_ref` |
+| `bygg-image-med-jib.yml` | Som over, men for enkeltmodulprosjekter. | – | `image_ref` |
 | `deploy.yml` | Deployer til Nais. | `CLUSTER`, `RESOURCE`, `WORKLOAD_IMAGE` (påkrevd), `VARS` (valgfri) | – |
 
 Workflowene kjører i konteksten til den som kaller dem (`workflow_call`). Det
 betyr at `actions/checkout` og `./gradlew` opererer på kall-repoet, ikke på dette
 repoet.
+
+`bygg-modul-image-med-jib.yml` kjører `./gradlew :<modul>:jib` og brukes av
+multimodulprosjekter. `bygg-image-med-jib.yml` kjører `./gradlew jib` og
+brukes av enkeltmodulprosjekter, der rotmodulen er den som blir til et image
+(altså der `no.nav.helse.sas.sas-deployable` er lagt på rotprosjektet). Bortsett
+fra hvilken modul som bygges er de to like.
 
 ## Bruk
 
