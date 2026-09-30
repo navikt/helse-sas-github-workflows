@@ -12,7 +12,8 @@ holde dem oppdatert med Dependabot.
 | `bygg-og-test-med-gradle.yml` | Bygger og tester med `./gradlew clean build`. | – | – |
 | `bygg-modul-image-med-jib.yml` | Bygger en modul som et image med Jib, lager SBOM, signerer og skanner for hemmeligheter. | `modul` (påkrevd) | `image_ref` |
 | `bygg-image-med-jib.yml` | Som over, men for enkeltmodulprosjekter. | – | `image_ref` |
-| `deploy.yml` | Deployer til Nais. | `CLUSTER`, `RESOURCE`, `WORKLOAD_IMAGE` (påkrevd), `VARS` (valgfri) | – |
+| `deploy.yml` | Deployer til Nais med `nais/deploy/actions/deploy` v3. Støtter eksisterende Kubernetes-manifester og Handlebars-templating. | `CLUSTER`, `RESOURCE`, `WORKLOAD_IMAGE` (påkrevd), `VARS` (valgfri) | – |
+| `deploy-v2.yml` | Deployer til Nais med `nais/setup` og `nais apply`. Krever manifester som bruker mixins. | `manifest`, `environment` (påkrevd), `image`, `extra_manifests` (valgfrie) | – |
 
 Workflowene kjører i konteksten til den som kaller dem (`workflow_call`). Det
 betyr at `actions/checkout` og `./gradlew` opererer på kall-repoet, ikke på dette
@@ -59,6 +60,26 @@ jobs:
       contents: read
       id-token: write
 ```
+
+Med `deploy-v2.yml` ser deploy-jobben slik ut i stedet:
+
+```yaml
+  deploy:
+    needs: bygg-image
+    uses: navikt/helse-sas-github-workflows/.github/workflows/deploy-v2.yml@<sha> # v1.0.0
+    with:
+      manifest: .nais/app.yaml
+      environment: dev-gcp
+      image: ${{ needs.bygg-image.outputs.image_ref }}
+    permissions:
+      contents: read
+      id-token: write
+```
+
+`extra_manifests` tar en kommaseparert liste med manifester som deployes før
+basismanifestet, for eksempel `.nais/dev-db-policy.yaml`. De får ikke satt
+`spec.image`. Lar du `image` stå tom, beholder `nais apply` imaget som kjører
+nå, slik at du kan deploye manifestendringer uten å bygge på nytt.
 
 ## Publisering og versjonering
 

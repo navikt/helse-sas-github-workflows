@@ -1,0 +1,57 @@
+name: Deploy v2
+
+on:
+  workflow_call:
+    inputs:
+      manifest:
+        description: 'Manifestet med workloaden som skal deployes.'
+        required: true
+        type: string
+      environment:
+        description: 'Nais-miljøet det skal deployes til.'
+        required: true
+        type: string
+      image:
+        description: 'Image som settes som spec.image.'
+        required: true
+        type: string
+      extra_manifests:
+        description: 'Kommaseparert liste med ekstra manifester som skal deployes, for eksempel db-policyer.'
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write # for nais-innlogging
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+
+    - name: Sett opp Nais CLI
+      uses: nais/setup@ea33c90b68228e6f04fb34b88bfd8ab6ad523ce8 # v1.0.2
+      with:
+        team: tbd
+        environment: ${{ inputs.environment }}
+
+    - name: nais apply
+      env:
+        MANIFEST: ${{ inputs.manifest }}
+        ENVIRONMENT: ${{ inputs.environment }}
+        IMAGE: ${{ inputs.image }}
+        EXTRA_MANIFESTS: ${{ inputs.extra_manifests }}
+      run: |
+        set -euo pipefail
+
+        while IFS= read -r manifest; do
+          [ -n "$manifest" ] || continue
+          nais apply "$manifest" --environment "$ENVIRONMENT" --wait
+        done < <(tr ',' '\n' <<< "$EXTRA_MANIFESTS" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
+        nais apply "$MANIFEST" --environment "$ENVIRONMENT" --set "spec.image=$IMAGE" --wait
