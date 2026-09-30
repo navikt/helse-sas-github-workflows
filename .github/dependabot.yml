@@ -1,8 +1,10 @@
 version: 2
 updates:
-  # Hold actions brukt i de gjenbrukbare workflowene oppdatert
+  # Hold actions brukt i de gjenbrukbare workflowene og actionene oppdatert
   - package-ecosystem: "github-actions"
-    directory: "/"
+    directories:
+      - "/"
+      - "/.github/actions/*"
     commit-message:
       prefix: "⬆️ "
     schedule:

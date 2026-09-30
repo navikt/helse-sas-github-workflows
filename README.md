@@ -1,7 +1,7 @@
-# helse-sas-github-workflows
+# sykepenger-github-workflows
 
-Gjenbrukbare GitHub Actions-workflows (`workflow_call`) for team TBD sine
-applikasjoner. Workflowene lå tidligere i `navikt/helse-sp-forsikring` og er
+Gjenbrukbare GitHub Actions-workflows (`workflow_call`) og actions for team TBD
+sine applikasjoner. Workflowene lå tidligere i `navikt/helse-sp-forsikring` og er
 flyttet hit slik at flere repoer kan dele dem, referere til dem med commit-SHA og
 holde dem oppdatert med Dependabot.
 
@@ -25,6 +25,41 @@ brukes av enkeltmodulprosjekter, der rotmodulen er den som blir til et image
 (altså der `no.nav.helse.sas.sas-deployable` er lagt på rotprosjektet). Bortsett
 fra hvilken modul som bygges er de to like.
 
+## Actions
+
+### `copilot-setup-steps`
+
+Setter opp miljøet til Copilot-agenten. Actionen sjekker ut kall-repoet,
+installerer Nav-tilpasninger og skills fra `navikt/helse-sas-meta` med
+nav-pilot, og gjør valgte verktøy tilgjengelige. Den installerer ikke
+prosjektavhengigheter. Det gjør agenten selv ved behov.
+
+| Input | Standard | Beskrivelse |
+| --- | --- | --- |
+| `kotlin` | `false` | Installerer JDK og setter opp Gradle. |
+| `node` | `false` | Installerer Node.js og pnpm. |
+| `package-json` | `package.json` | Fila som bestemmer pnpm-versjonen (`packageManager`) og Node-versjonen (`engines.node`). |
+
+Copilot kjører bare stegene i en jobb som heter `copilot-setup-steps` i repoets
+egen `.github/workflows/copilot-setup-steps.yml`. Derfor er dette en composite
+action og ikke en gjenbrukbar workflow. Et Gradle-prosjekt med frontend i en
+undermappe ser slik ut:
+
+```yaml
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: navikt/sykepenger-github-workflows/.github/actions/copilot-setup-steps@<sha> # v1.0.0
+        with:
+          kotlin: true
+          node: true
+          package-json: frontend/package.json
+```
+
 ## Bruk
 
 Referer alltid med commit-SHA, med versjonen som kommentar, slik at Dependabot kan
@@ -33,13 +68,13 @@ holde referansen oppdatert:
 ```yaml
 jobs:
   bygg-og-test:
-    uses: navikt/helse-sas-github-workflows/.github/workflows/bygg-og-test-med-gradle.yml@<sha> # v1.0.0
+    uses: navikt/sykepenger-github-workflows/.github/workflows/bygg-og-test-med-gradle.yml@<sha> # v1.0.0
     permissions:
       contents: read
 
   bygg-image:
     needs: bygg-og-test
-    uses: navikt/helse-sas-github-workflows/.github/workflows/bygg-modul-image-med-jib.yml@<sha> # v1.0.0
+    uses: navikt/sykepenger-github-workflows/.github/workflows/bygg-modul-image-med-jib.yml@<sha> # v1.0.0
     with:
       modul: min-modul
     permissions:
@@ -50,7 +85,7 @@ jobs:
 
   deploy:
     needs: bygg-image
-    uses: navikt/helse-sas-github-workflows/.github/workflows/deploy.yml@<sha> # v1.0.0
+    uses: navikt/sykepenger-github-workflows/.github/workflows/deploy.yml@<sha> # v1.0.0
     with:
       CLUSTER: dev-gcp
       RESOURCE: .nais/app.yaml
@@ -66,7 +101,7 @@ Med `deploy-v2.yml` ser deploy-jobben slik ut i stedet:
 ```yaml
   deploy:
     needs: bygg-image
-    uses: navikt/helse-sas-github-workflows/.github/workflows/deploy-v2.yml@<sha> # v1.0.0
+    uses: navikt/sykepenger-github-workflows/.github/workflows/deploy-v2.yml@<sha> # v1.0.0
     with:
       manifest: .nais/app.yaml
       environment: dev-gcp
@@ -84,7 +119,7 @@ nå, slik at du kan deploye manifestendringer uten å bygge på nytt.
 ## Publisering og versjonering
 
 `Release`-workflowen (`.github/workflows/release.yml`) kjører på push til `main`
-når noe under `.github/workflows/` endres. Den:
+når noe under `.github/workflows/` eller `.github/actions/` endres. Den:
 
 1. finner høyeste eksisterende `vX.Y.Z`-tag og øker patch-nummeret,
 2. oppretter en GitHub-release med den nye taggen på gjeldende commit, og
@@ -95,5 +130,6 @@ SHA-referansen og oppdatere versjonskommentaren automatisk.
 
 ## Vedlikehold
 
-`.github/dependabot.yml` holder actions som brukes inne i workflowene oppdatert.
+`.github/dependabot.yml` holder actions som brukes inne i workflowene og i
+`.github/actions/*` oppdatert.
 Når en slik oppdatering merges til `main`, publiseres automatisk en ny versjon.
