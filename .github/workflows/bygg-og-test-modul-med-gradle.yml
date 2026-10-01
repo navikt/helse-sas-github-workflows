@@ -31,4 +31,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MODUL: ${{ inputs.modul }}
-        run: ./gradlew clean :${{ inputs.modul }}:build --build-cache
+        run: ./gradlew clean ":$MODUL:build" --build-cache
