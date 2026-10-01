@@ -114,7 +114,9 @@ Med `deploy-v2.yml` ser deploy-jobben slik ut i stedet:
 `extra_manifests` tar en kommaseparert liste med manifester som deployes før
 basismanifestet, for eksempel `.nais/dev-db-policy.yaml`. De får ikke satt
 `spec.image`. Lar du `image` stå tom, beholder `nais apply` imaget som kjører
-nå, slik at du kan deploye manifestendringer uten å bygge på nytt.
+nå, slik at du kan deploye manifestendringer uten å bygge på nytt. Uten `image`
+kan `manifest` også være en ressurs uten image, for eksempel et Kafka-`Topic`,
+og den kan da inneholde flere YAML-dokumenter så lenge den ikke har mixins.
 
 ## Publisering og versjonering
 

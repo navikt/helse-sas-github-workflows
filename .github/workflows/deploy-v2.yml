@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       manifest:
-        description: 'Manifestet med workloaden som skal deployes.'
+        description: 'Manifestet som skal deployes.'
         required: true
         type: string
       environment:
@@ -12,8 +12,9 @@ on:
         required: true
         type: string
       image:
-        description: 'Image som settes som spec.image.'
-        required: true
+        description: 'Image som settes som spec.image. Utelates for ressurser uten image, eller for å beholde imaget som kjører nå.'
+        required: false
+        default: ''
         type: string
       extra_manifests:
         description: 'Kommaseparert liste med ekstra manifester som skal deployes, for eksempel db-policyer.'
@@ -54,4 +55,8 @@ jobs:
           nais apply "$manifest" --environment "$ENVIRONMENT" --wait
         done < <(tr ',' '\n' <<< "$EXTRA_MANIFESTS" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
-        nais apply "$MANIFEST" --environment "$ENVIRONMENT" --set "spec.image=$IMAGE" --wait
+        if [ -n "$IMAGE" ]; then
+          nais apply "$MANIFEST" --environment "$ENVIRONMENT" --set "spec.image=$IMAGE" --wait
+        else
+          nais apply "$MANIFEST" --environment "$ENVIRONMENT" --wait
+        fi
