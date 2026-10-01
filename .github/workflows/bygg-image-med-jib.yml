@@ -39,9 +39,10 @@ jobs:
       id: jib
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        REGISTRY: ${{ steps.login.outputs.registry }}
       run: |
         ./gradlew jib --build-cache \
-          -Pimage.registry='${{ steps.login.outputs.registry }}' \
+          -Pimage.registry="$REGISTRY" \
           -Pimage.tag=$(date -u +%Y.%m.%d-%H.%M)-$(git rev-parse --short=12 HEAD) \
           -Djib.console=plain
         ref="$(cat build/jib-image.name)@$(cat build/jib-image.digest)"
