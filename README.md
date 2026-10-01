@@ -22,7 +22,7 @@ repoet.
 `bygg-modul-image-med-jib.yml` kjører `./gradlew :<modul>:jib` og brukes av
 multimodulprosjekter. `bygg-image-med-jib.yml` kjører `./gradlew jib` og
 brukes av enkeltmodulprosjekter, der rotmodulen er den som blir til et image
-(altså der `no.nav.helse.sas.sas-deployable` er lagt på rotprosjektet). Bortsett
+(altså der `no.nav.sykepenger.deployable` er lagt på rotprosjektet). Bortsett
 fra hvilken modul som bygges er de to like.
 
 ## Actions
