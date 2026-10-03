@@ -1,13 +1,18 @@
 version: 2
+multi-ecosystem-groups:
+  dependencies:
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "⬆️ "
 updates:
-  # Hold actions brukt i de gjenbrukbare workflowene og actionene oppdatert
   - package-ecosystem: "github-actions"
     directories:
       - "/"
       - "/.github/actions/*"
-    commit-message:
-      prefix: "⬆️ "
-    schedule:
-      interval: "daily"
+    multi-ecosystem-group: "dependencies"
+    patterns: ["*"]
     cooldown:
       default-days: 7
+      exclude:
+        - "navikt/sykepenger-github-workflows*"
